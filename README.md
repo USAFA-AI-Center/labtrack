@@ -1,3 +1,5 @@
+<img width="784" height="240" alt="image" src="static/img/fair-logo-dark.png"/>
+
 # LabTrack
 
 A small Flask app for your Raspberry Pi that:
