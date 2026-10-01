@@ -161,6 +161,23 @@ kbd {
   font-variant-numeric: tabular-nums;
 }
 
+/* Clock with the version stamp tucked under it, right-aligned. A column
+   flex item's baseline is its first line's, so the clock still lines up with
+   the key hint beside it. */
+.board__time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.board__version {
+  font-family: var(--mono);
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  color: var(--text-low);
+  margin-top: 0.5rem;
+}
+
 /* Square corners on purpose - no border-radius here. With overflow:hidden it
    clips the background video to a rounded rect, and because the video and
    the slide layer above it both draw inside that clip, Chromium can't do it

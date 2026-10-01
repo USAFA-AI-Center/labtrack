@@ -655,6 +655,12 @@ anything on this hardware. If the board ever looks sluggish again, re-check
   reversed logo, swap that in instead. Displayed size is fixed by
   `width`/`height` on the `<img>`, so the header doesn't reflow when it
   loads.
+- **Version stamp** — `VERSION` in `app.py`, rendered small and dim under
+  the kiosk clock. Purely cosmetic: no tags, no releases, nothing reads it.
+  Bump it by hand with the change - patch for fixes and tweaks, minor for a
+  feature, major when something people relied on is removed. 2.0.0 was the
+  removal of time tracking and the CAC reader; 1.0.0 was the first build fit
+  to run unattended (2026-09-02, the stall/reboot work).
 - **The clocks are 24-hour** — the kiosk header clock and the dashboard's
   "Updated" stamp, the only times either page shows (see "No time
   tracking") — via `hourCycle: "h23"` in the shared `TIME_OPTS` at the top

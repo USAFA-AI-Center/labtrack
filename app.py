@@ -21,6 +21,12 @@ log = logging.getLogger("labtrack")
 
 app = Flask(__name__)
 
+# Shown small under the kiosk clock. Purely cosmetic - nothing reads it and
+# there are no tagged releases - so bump it by hand: patch for fixes and
+# tweaks, minor for a feature, major when something people relied on goes
+# away (as the time tracking and CAC reader did in 2.0.0).
+VERSION = "2.2.3"
+
 OBJECTIVES_PATH = Path(__file__).parent / "config" / "objectives.json"
 # Where an 'away' member can say they went. Preset buttons on the kiosk, so
 # the common places are one keypress or click; "Other" falls back to typing.
@@ -233,7 +239,8 @@ def _require_dashboard_password():
 @app.route("/")
 def kiosk():
     """The always-on display: screensaver + toast overlay on check-in/out."""
-    return render_template("index.html", background_video=_background_video())
+    return render_template("index.html", background_video=_background_video(),
+                           version=VERSION)
 
 
 @app.route("/dashboard")

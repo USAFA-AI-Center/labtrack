@@ -26,7 +26,14 @@
           <span class="board__keys-sep">&middot;</span>
           <kbd>Enter</kbd> check in / out
         </div>
-        <div class="board__clock" id="clock">--:--:--</div>
+        <!-- Version sits under the clock rather than beside it: the header
+             row has ~100px spare at 1080p, and stacked here it costs no
+             width and stays inside the logo's height. Rendered server-side,
+             so it is static text that never repaints. -->
+        <div class="board__time">
+          <div class="board__clock" id="clock">--:--:--</div>
+          <div class="board__version">v{{ version }}</div>
+        </div>
       </div>
     </header>
 
