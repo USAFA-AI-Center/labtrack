@@ -133,8 +133,10 @@ carry their own key hints.
   that back.
 - **In the dialog**, the likeliest action is focused as it opens (out →
   Check in, in → Check out, away → Back in lab), so the whole common flow
-  is Enter, Enter. Every arrow key steps through the visible buttons
-  (the location row wraps, so up/down aren't spatial); Escape cancels, or
+  is Enter, Enter. Left/right step through the visible buttons in
+  reading order, wrapping; up/down are spatial - nearest row above or
+  below, closest control horizontally, measured from the rendered layout
+  so a wrapped location row needs no special case; Escape cancels, or
   from the "Other" box backs out to the buttons first. `.confirm__btn:focus`
   is plain `:focus`, not `:focus-visible`, because Enter fires whatever is
   focused and the ring must show even after a mouse opened the dialog.

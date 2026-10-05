@@ -465,10 +465,54 @@ confirmOtherForm.addEventListener("submit", (e) => {
   submitChoice("away", confirmOtherInput.value.trim() || null);
 });
 
-// Inside the dialog every arrow key steps through whichever buttons are
-// showing (the location row wraps onto more than one line, so up/down act
-// like left/right rather than trying to be spatial). Enter on a focused
-// button is native, and Enter in the text box submits its form.
+// Inside the dialog, left/right step through whichever buttons are showing
+// in reading order, wrapping at either end. Up/down are spatial: they move
+// to the nearest row above or below (the action row, the location rows -
+// which wrap onto more than one line - and the "Other" box) and land on
+// whatever in that row sits closest horizontally, stopping at the top and
+// bottom. Enter on a focused button is native, and Enter in the text box
+// submits its form.
+function dialogControls() {
+  return [...confirmEl.querySelectorAll("button, input")]
+    .filter((el) => !el.hidden && !el.closest("[hidden]"));
+}
+
+function stepAcross(step) {
+  const buttons = dialogControls().filter((el) => el.tagName === "BUTTON");
+  if (!buttons.length) return;
+  const at = buttons.indexOf(document.activeElement);
+  buttons[(at + step + buttons.length) % buttons.length].focus();
+}
+
+// Rows come from where the controls actually landed after wrapping, so a
+// longer locations.json or a narrower panel needs nothing here. Two controls
+// share a row when their vertical centres are within half a control's height.
+// Only runs on a keypress with the dialog up, so the layout reads are free.
+function stepVertical(dir) {
+  const from = document.activeElement;
+  const controls = dialogControls();
+  if (!controls.includes(from)) { stepAcross(dir); return; }
+  const centre = (r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+  const fromRect = from.getBoundingClientRect();
+  const f = centre(fromRect);
+  const tol = fromRect.height / 2;
+
+  let rowY = null;
+  const placed = controls.map((el) => ({ el, c: centre(el.getBoundingClientRect()) }));
+  for (const { c } of placed) {
+    const dy = (c.y - f.y) * dir;
+    if (dy > tol && (rowY === null || dy < (rowY - f.y) * dir)) rowY = c.y;
+  }
+  if (rowY === null) return;   // already on the top/bottom row
+
+  let best = null;
+  for (const p of placed) {
+    if (Math.abs(p.c.y - rowY) > tol) continue;
+    if (best === null || Math.abs(p.c.x - f.x) < Math.abs(best.c.x - f.x)) best = p;
+  }
+  best.el.focus();
+}
+
 confirmEl.addEventListener("keydown", (e) => {
   // The dialog owns every key while it is up. Without this, the Escape that
   // closes it would bubble on to the document handler below - which by then
@@ -485,15 +529,14 @@ confirmEl.addEventListener("keydown", (e) => {
     }
     return;
   }
-  const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-  if (!step) return;
-  if (e.target === confirmOtherInput && (e.key === "ArrowLeft" || e.key === "ArrowRight")) return;
+  const across = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+  const down = { ArrowDown: 1, ArrowUp: -1 }[e.key];
+  if (!across && !down) return;
+  // Left/right in the "Other" box move the text cursor.
+  if (across && e.target === confirmOtherInput) return;
   e.preventDefault();
-  const buttons = [...confirmEl.querySelectorAll("button")]
-    .filter((b) => !b.hidden && !b.closest("[hidden]"));
-  if (!buttons.length) return;
-  const at = buttons.indexOf(document.activeElement);
-  buttons[(at + step + buttons.length) % buttons.length].focus();
+  if (across) stepAcross(across);
+  else stepVertical(down);
 });
 
 // --- keyboard --------------------------------------------------------
