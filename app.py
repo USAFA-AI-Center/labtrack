@@ -25,7 +25,7 @@ app = Flask(__name__)
 # there are no tagged releases - so bump it by hand: patch for fixes and
 # tweaks, minor for a feature, major when something people relied on goes
 # away (as the time tracking and CAC reader did in 2.0.0).
-VERSION = "2.3.1"
+VERSION = "2.3.2"
 
 OBJECTIVES_PATH = Path(__file__).parent / "config" / "objectives.json"
 # Where an 'away' member can say they went. Preset buttons on the kiosk, so
