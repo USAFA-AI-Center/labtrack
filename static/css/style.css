@@ -540,6 +540,41 @@ body.kiosk.has-pointer .roster__card:hover {
   color: var(--danger);
 }
 
+/* How long until the toast goes away: a bar along the bottom edge that
+   shrinks to nothing. Its colour follows the action text. Animated with
+   transform only, so the compositor runs it with no repaint; the duration
+   is set from main.js so it always matches the real timeout. */
+.toast__timer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  background: var(--phosphor);
+  transform-origin: left center;
+}
+
+.toast__timer.is-running {
+  animation: toast-timer linear forwards;
+}
+
+@keyframes toast-timer {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+.toast.is-out .toast__timer {
+  background: var(--amber);
+}
+
+.toast.is-away .toast__timer {
+  background: var(--away);
+}
+
+.toast.is-error .toast__timer {
+  background: var(--danger);
+}
+
 .toast__note {
   display: none;
   flex-direction: column;
@@ -795,7 +830,7 @@ body.kiosk.has-pointer .roster__card:hover {
    has-bg rather than applied unconditionally: with no video there is nothing
    to reveal, and a fully opaque overlay lets the compositor skip painting
    the whole board underneath (Performance above). The cost only applies
-   while an overlay is actually up - 4s per check-in, or 15s for a note prompt. */
+   while an overlay is actually up - 2.5s per check-in, or 15s for a note prompt. */
 body.has-bg .toast,
 body.has-bg .confirm,
 body.has-bg .reboot {

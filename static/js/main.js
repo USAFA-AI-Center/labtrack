@@ -4,7 +4,7 @@
 // the backend for status changes.
 
 const POLL_MS = 1500;
-const TOAST_VISIBLE_MS = 4000;
+const TOAST_VISIBLE_MS = 2000;
 const NOTE_PROMPT_TIMEOUT_MS = 15000;
 
 // null = no baseline established yet (first poll after page load hasn't
@@ -157,6 +157,17 @@ function setToastVisible(visible) {
   syncOverlayState();
 }
 
+// Run the toast's countdown bar for `ms`. Removing the class and forcing a
+// reflow restarts the animation when one toast replaces another that is
+// still up; a hidden toast is display:none, which stops it anyway.
+function startToastTimer(ms) {
+  const bar = document.getElementById("toast-timer");
+  bar.classList.remove("is-running");
+  void bar.offsetWidth;
+  bar.style.animationDuration = `${ms}ms`;
+  bar.classList.add("is-running");
+}
+
 function hideNotePrompt() {
   if (document.body.classList.contains("is-note-prompt")) releaseFocus();
   document.getElementById("toast-note").style.display = "none";
@@ -189,6 +200,7 @@ function showToast(event) {
     document.getElementById("toast-action").textContent = "";
     toast.classList.add("is-error");
     setToastVisible(true);
+    startToastTimer(TOAST_VISIBLE_MS);
     showToast._t = setTimeout(() => setToastVisible(false), TOAST_VISIBLE_MS);
     return;
   }
@@ -267,9 +279,11 @@ function showToast(event) {
       else if (e.key === "ArrowLeft") { e.preventDefault(); skipBtn.focus(); }
     };
 
+    startToastTimer(NOTE_PROMPT_TIMEOUT_MS);
     showToast._noteTimeout = setTimeout(finish, NOTE_PROMPT_TIMEOUT_MS);
   } else {
     // Checking in (or any non-checkout event): plain toast, auto-hide.
+    startToastTimer(TOAST_VISIBLE_MS);
     showToast._t = setTimeout(() => setToastVisible(false), TOAST_VISIBLE_MS);
   }
 }
