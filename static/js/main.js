@@ -185,7 +185,18 @@ function releaseFocus() {
 
 const ACTION_LABELS = { in: "Checked in", away: "Stepped away", out: "Checked out" };
 
+// The short timed toast: countdown bar plus auto-hide after TOAST_VISIBLE_MS.
+function autoHideToast() {
+  startToastTimer(TOAST_VISIBLE_MS);
+  showToast._t = setTimeout(() => setToastVisible(false), TOAST_VISIBLE_MS);
+}
+
+// Bumped by every showToast(), so a note prompt whose save is still in flight
+// can tell that a newer event has taken the toast over in the meantime.
+let toastSeq = 0;
+
 function showToast(event) {
+  const seq = ++toastSeq;
   const toast = document.getElementById("toast");
   toast.classList.remove("is-out", "is-away", "is-error");
   clearTimeout(showToast._t);
@@ -200,8 +211,7 @@ function showToast(event) {
     document.getElementById("toast-action").textContent = "";
     toast.classList.add("is-error");
     setToastVisible(true);
-    startToastTimer(TOAST_VISIBLE_MS);
-    showToast._t = setTimeout(() => setToastVisible(false), TOAST_VISIBLE_MS);
+    autoHideToast();
     return;
   }
 
@@ -224,24 +234,42 @@ function showToast(event) {
     input.value = "";
     setTimeout(() => input.focus(), 50);
 
-    const finish = () => {
-      setToastVisible(false);
+    // Skip, Save and Escape end on the same short confirmation a check-in
+    // gets, so the prompt closing reads as "done" rather than vanishing. The
+    // timeout just hides it: nobody answered, and the toast has already
+    // said "Checked out" for the whole prompt.
+    let done = false;
+    const confirmCheckout = (note) => {
+      if (seq !== toastSeq) return; // a newer event owns the toast now
       hideNotePrompt();
+      document.getElementById("toast-action").textContent =
+        note ? `Checked out · ${note}` : "Checked out";
+      autoHideToast();
+    };
+    const finish = () => {
+      if (done) return;
+      done = true;
+      confirmCheckout("");
     };
     const save = async () => {
+      if (done) return;
+      done = true;
       const note = input.value.trim();
+      let saved = false;
       if (note) {
         try {
-          await fetch(`/api/presence/${event.change_id}/note`, {
+          const res = await fetch(`/api/presence/${event.change_id}/note`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ note }),
           });
+          saved = res.ok;
+          if (!saved) report("note-save-failed", `HTTP ${res.status}`);
         } catch (e) {
           report("note-save-failed", e);
         }
       }
-      finish();
+      confirmCheckout(saved ? note : "");
     };
 
     const skipBtn = document.getElementById("note-skip");
@@ -280,11 +308,14 @@ function showToast(event) {
     };
 
     startToastTimer(NOTE_PROMPT_TIMEOUT_MS);
-    showToast._noteTimeout = setTimeout(finish, NOTE_PROMPT_TIMEOUT_MS);
+    showToast._noteTimeout = setTimeout(() => {
+      done = true;
+      setToastVisible(false);
+      hideNotePrompt();
+    }, NOTE_PROMPT_TIMEOUT_MS);
   } else {
     // Checking in (or any non-checkout event): plain toast, auto-hide.
-    startToastTimer(TOAST_VISIBLE_MS);
-    showToast._t = setTimeout(() => setToastVisible(false), TOAST_VISIBLE_MS);
+    autoHideToast();
   }
 }
 
